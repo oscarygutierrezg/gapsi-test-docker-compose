@@ -6,8 +6,8 @@ Sistema de gestión de proveedores. Stack dockerizado con frontend React, backen
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│              HTTP (8081)                            │
-│            localhost:8081                           │
+│              HTTP (80)                            │
+│            localhost:80                           │
 └───────────────────┬─────────────────────────────────┘
                     │
             ┌───────▼────────┐
@@ -45,38 +45,39 @@ Sistema de gestión de proveedores. Stack dockerizado con frontend React, backen
 ## 📦 Instalación Rápida
 
 1. **Asegurar que las imágenes estén construidas:**
+
    ```bash
    # Backend
    cd ../gapsi-test-backend
    ./mvnw clean package -DskipTests
    docker build -t oscarygutierrezg/gapsi-test-backend:latest .
-   
+
    # Frontend
    cd ../gapsi-test-frontend
    npm run build
    docker build -t oscarygutierrezg/gapsi-test-frontend:latest .
    ```
-
 2. **Configurar variables de entorno:**
+
    ```bash
    cd ../gapsi-test-docker-compose
    # El archivo .env ya existe con la configuración por defecto
    # Editar si necesitas cambiar valores
    ```
-
 3. **Iniciar los servicios:**
+
    ```bash
    docker-compose up -d
    ```
-
 4. **Verificar el estado:**
+
    ```bash
    docker-compose ps
    ```
 
 ## 🎯 Acceso a la Aplicación
 
-- **Frontend:** http://localhost:8081
+- **Frontend:** http://localhost:80
 - **Backend API REST:** http://localhost:8080/gapsi-test-ecommerce/api/v1/suppliers
 - **Backend GraphQL:** http://localhost:8080/gapsi-test-ecommerce/graphql
 - **GraphiQL:** http://localhost:8080/gapsi-test-ecommerce/graphiql
@@ -130,7 +131,7 @@ SPRING_PROFILES_ACTIVE=dev
 
 # Variables de entorno para la aplicación
 SERVER_PORT=8080
-CORS_ALLOWED_ORIGINS=http://localhost:8081,http://gapsi-frontend
+CORS_ALLOWED_ORIGINS=http://localhost:80,http://gapsi-frontend
 
 # Redis Configuration
 REDIS_HOST=gapsi-redis
@@ -145,6 +146,7 @@ LOG_PATH=/opt/gapsi/logs
 ## 🏗 Build de Imágenes
 
 ### Backend
+
 ```bash
 cd ../gapsi-test-backend
 
@@ -159,6 +161,7 @@ docker push oscarygutierrezg/gapsi-test-backend:latest
 ```
 
 ### Frontend
+
 ```bash
 cd ../gapsi-test-frontend
 
@@ -178,6 +181,7 @@ docker push oscarygutierrezg/gapsi-test-frontend:latest
 ## 🔍 Monitoreo y Logs
 
 ### Logs en Consola
+
 ```bash
 # Ver todos los logs
 docker-compose logs -f
@@ -233,6 +237,7 @@ docker stats
 ## 🛠 Troubleshooting
 
 ### Redis no inicia
+
 ```bash
 # Verificar logs de Redis
 docker-compose logs redis
@@ -244,6 +249,7 @@ docker exec gapsi-redis redis-cli -a gapsi2024 ping
 ```
 
 ### Backend no inicia o reinicia constantemente
+
 ```bash
 # Ver logs completos
 docker-compose logs gapsi-backend
@@ -259,6 +265,7 @@ tail -100 logs/gapsi-backend-error.log
 ```
 
 ### Frontend no carga o muestra errores
+
 ```bash
 # Verificar logs
 docker-compose logs gapsi-frontend
@@ -271,6 +278,7 @@ docker exec gapsi-frontend wget -O- http://gapsi-backend:8080/gapsi-test-ecommer
 ```
 
 ### Error de conexión entre contenedores
+
 ```bash
 # Verificar que estén en la misma red
 docker network inspect gapsi-test-docker-compose_gapsi-network
@@ -284,6 +292,7 @@ docker exec gapsi-backend env | grep REDIS
 ```
 
 ### Reiniciar servicios individuales
+
 ```bash
 # Reiniciar solo backend
 docker-compose restart gapsi-backend
@@ -299,6 +308,7 @@ docker-compose restart
 ```
 
 ### Limpiar y empezar de nuevo
+
 ```bash
 # Detener y eliminar todo
 docker-compose down -v
@@ -314,24 +324,26 @@ docker-compose up -d
 
 Los servicios incluyen health checks automáticos:
 
-- **Redis:** 
+- **Redis:**
+
   - Comando: `redis-cli --pass gapsi2024 ping`
   - Intervalo: cada 30s
   - El backend espera a que Redis esté healthy
+- **Backend:**
 
-- **Backend:** 
   - Ruta: `/gapsi-test-ecommerce/actuator/health`
   - Intervalo: cada 30s
   - Start period: 90s (tiempo de espera inicial)
   - El frontend espera a que el backend esté healthy
-
 - **Frontend:**
+
   - Se inicia automáticamente después de que el backend esté healthy
   - No tiene health check propio (nginx es muy liviano)
 
 ## 🔄 Actualización
 
 ### Actualizar desde Docker Hub
+
 ```bash
 # Descargar nuevas imágenes
 docker-compose pull
@@ -341,6 +353,7 @@ docker-compose up -d
 ```
 
 ### Actualizar desde código fuente
+
 ```bash
 # 1. Backend
 cd ../gapsi-test-backend
@@ -413,6 +426,7 @@ Este proyecto es privado y confidencial.
 ---
 
 **Desarrollado para prueba técnica GAPSI** 🚀
+
 ```
 
 ### Contenedores
@@ -487,6 +501,7 @@ sudo bash scripts/setup-service.sh
 ```
 
 **El script automáticamente:**
+
 - ✅ Crea `/opt/tecnowave/` con subdirectorios
 - ✅ Copia `docker-compose.yml` y scripts
 - ✅ Configura servicio systemd `tecnowave.service`
@@ -734,6 +749,7 @@ sudo journalctl -u tecnowave-cleanup.service -n 50
 ```
 
 **Política de limpieza:**
+
 - 📅 Ejecución diaria a las **2:00 AM**
 - 🗄️ Retención de logs: **30 días**
 - 📦 Compresión automática con GZIP
@@ -819,6 +835,7 @@ sudo nano /etc/cron.d/certbot-renew
 ```
 
 **Contenido:**
+
 ```bash
 0 3 * * * root certbot renew --quiet --deploy-hook "cp /etc/letsencrypt/live/tecnowavespa.online/*.pem /opt/tecnowave/ssl/ && systemctl restart tecnowave"
 ```
@@ -973,6 +990,7 @@ SELECT * FROM flyway_schema_history ORDER BY installed_rank DESC;
 ### Monitoreo a Largo Plazo
 
 Considerar instalar:
+
 - **Prometheus + Grafana:** Métricas y dashboards
 - **Netdata:** Monitoreo en tiempo real del sistema
 - **Uptime Kuma:** Monitoreo uptime y alertas
