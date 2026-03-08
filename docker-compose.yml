@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  gapsi-backend:
+    image: oscarygutierrezg/gapsi-test-backend:latest
+    container_name: gapsi-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    
+    # Variables de entorno
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+      - SERVER_PORT=8080
+      - LOG_PATH=/opt/gapsi/logs
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    
+    # Variables desde archivo .env (opcional)
+    env_file:
+      - .env
+    
+    # Volúmenes para logs persistentes
+    volumes:
+      - ./logs:/opt/gapsi/logs
+    
+    depends_on:
+      redis:
+        condition: service_healthy
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/gapsi-test-ecommerce/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    
+    networks:
+      - gapsi-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  gapsi-frontend:
+    image: oscarygutierrezg/gapsi-test-frontend:latest
+    container_name: gapsi-frontend
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    
+    depends_on:
+      gapsi-backend:
+        condition: service_healthy
+    
+    networks:
+      - gapsi-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: gapsi-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+    # Variables desde archivo .env (opcional)
+    env_file:
+      - .env
+    
+    
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    
+    volumes:
+      - redis-data:/data
+    
+    networks:
+      - gapsi-network
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "--pass", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  gapsi-network:
+    driver: bridge
+
